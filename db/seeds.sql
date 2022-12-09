@@ -1,3 +1,4 @@
+-- SAMPLE DATA TO BE ADDED TO THE DB IF SAMPLE DATA IS WANTED
 INSERT INTO department (id, department_name)
 VALUES (001, "Accounting"),
        (002, "Marketing");

@@ -1,3 +1,4 @@
+// IMPORTING NEEDED FUNCTIONS/DEPENDENCIES
 const inquirer = require("inquirer");
 const mysql = require('mysql2');
 require('dotenv').config();
@@ -26,15 +27,17 @@ const validateNum = (num) => {
   }
 };
 
-// Connect to database
+// CREATING THE DATABASE CONNECTION
 const database = mysql.createConnection({
   host: 'localhost',
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   database: "employeetracker_db",
 });
+// CONNECTING TO THE DATABASE
 database.connect();
 
+// THE MAIN MENU OF THE APP
 const mainApp = () => {
   inquirer.prompt([
     {
@@ -67,6 +70,7 @@ const mainApp = () => {
         addDepartment();
         return;
       } else {
+        // TERMINATING THE CONNECTION IF YOU CHOOSE TO EXIT OTHERWISE THE CONSOLE DOESN'T RESET WITHOUT USER INPUT
         database.end();
         return;
       }
@@ -85,12 +89,14 @@ const allEmployees = () => {
     })
 };
 
+// ADDING EMPLOYEE TO THE DATABASE
 const addEmployee = () => {
-
   let empList = ["No Manager"]
+  // COMBINES THE FIRST AND LAST NAME TO MAKE IT LOOK NICER IN THE TABLE
   database.promise().query(`SELECT concat(e.first_name," ",e.last_name) AS Employee FROM employee AS e`)
     .then((emp) => {
       let e = emp[0];
+      // FOR LOOP POPULATES THE LIST
       for (let i = 0; i < e.length; i++) {
         empList.push(e[i].Employee);
       }
@@ -100,11 +106,11 @@ const addEmployee = () => {
   database.promise().query(`SELECT * FROM roles`)
     .then((role) => {
       let r = role[0];
+      // FOR LOOP POPULATE THE LIST
       for (let i = 0; i < r.length; i++) {
         roleList.push(r[i].title);
       }
     })
-
   inquirer.prompt([
     {
       type: 'input',
@@ -134,15 +140,20 @@ const addEmployee = () => {
     .then((answers) => {
       let deptID
       let mID
+      // QUERY TO GET THE ID OF THE SELECTED ROLE
       database.promise().query(`SELECT role.id FROM roles AS role WHERE title = "${answers.role}"`)
         .then((d) => {
           let did = d[0];
           deptID = did[0].id
           let manager = answers.manager
+          // SPLITTING THE COMBINED NAME BACK INTO FIRST/LAST
           let manSplit = manager.split(" ")
+          // QUERY TO GET THE EMPLOYEE ID OF THE SELECTED MANAGER
           database.promise().query(`SELECT emp.id FROM employee AS emp WHERE first_name = "${manSplit[0]}" AND last_name = "${manSplit[1]}"`)
             .then((m) => {
+              // IF NO MANAGER, SET TO NULL, IF MANAGER, GET THE MANAGER ID
               if (answers.manager == "No Manager") { mID = null } else { let manID = m[0]; mID = manID[0].id }
+              // ADDING EMPLOYEE TO THE DATABASE
               database.query(`INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES ("${answers.first}", "${answers.last}", ${deptID}, ${mID})`,
                 (err, res) => {
                   if (err) {
@@ -158,6 +169,7 @@ const addEmployee = () => {
     })
 };
 
+// VIEW ALL ROLES QUERY
 const allRoles = () => {
   database.query('SELECT role.id AS RoleID, role.title as JobTitle, role.salary as Salary, depart.department_name as Department FROM roles AS role LEFT JOIN employeetracker_db.department AS depart ON depart.id=role.department_id',
     (err, res) => {
@@ -169,18 +181,22 @@ const allRoles = () => {
     })
 };
 
+// CHANGING ROLES QUERY
 const changeRole = () => {
   let empList = []
   let roleList = []
+  // COMBINE THE FIRST/LAST TO LOOK NICER IN THE PRESENTED TABLE
   database.promise().query(`SELECT concat(e.first_name," ",e.last_name) AS Employee FROM employee AS e`)
     .then((emp) => {
       let e = emp[0];
+      // FOR LOOP POPULATE THE LIST
       for (let i = 0; i < e.length; i++) {
         empList.push(e[i].Employee);
       }
       database.promise().query(`SELECT * FROM roles`)
         .then((role) => {
           let r = role[0];
+          // FOR LOOP POPULATE THE LIST
           for (let i = 0; i < r.length; i++) {
             roleList.push(r[i].title);
           }
@@ -200,15 +216,19 @@ const changeRole = () => {
           ])
             .then((answers) => {
               let employee = answers.employee
+              // SPLIT COMINBED NAME BACK INTO FIRST/LAST
               employee = employee.split(" ")
+              // QUERY TO GET THE ID OF THE SELECTED EMPLOYEE
               database.promise().query(`SELECT emp.id FROM employee AS emp WHERE first_name = "${employee[0]}" AND last_name = "${employee[1]}"`)
                 .then((e) => {
                   let empID = e[0];
                   empID = empID[0].id
+                  // QUERY TO GET THE ID OF THE SELECTED ROLE
                   database.promise().query(`SELECT role.id FROM roles AS role WHERE title = "${answers.roles}"`)
                     .then((r) => {
                       let rid = r[0];
                       rid = rid[0].id
+                      // QUERY TO UPDATE THE SELECTED EMPLOYEE TO THE SELECTED ROLE
                       database.promise().query(`UPDATE employee SET role_id = ${rid} WHERE id = ${empID}`)
                         .then((f) => {
                           console.log(`"${answers.employee}" role is succesfully changed to ${answers.roles}`)
@@ -221,11 +241,14 @@ const changeRole = () => {
     })
 };
 
+// ADD NEW ROLE FUNCTION
 const addRole = async () => {
   let departList = []
+  // QUERY TO GET ALL DEPARTMENTS
   database.promise().query(`SELECT * FROM department`)
     .then((depart) => {
       let d = depart[0];
+      // FOR LOOP POPULATE THE LIST
       for (let i = 0; i < d.length; i++) {
         departList.push(d[i].department_name);
       }
@@ -252,10 +275,12 @@ const addRole = async () => {
   ])
     .then((answers) => {
       let departID
+      // QUERY TO GET THE DEPARTMENT ID BASED ON SELECTED DEPARTMENT
       database.promise().query(`SELECT depart.id FROM Department AS depart WHERE department_name = "${answers.department}"`)
         .then((depart) => {
           let id = depart[0];
           departID = id[0].id
+          // INSERTING THE NEW ROLE INTO THE DATABASE
           database.query(`INSERT INTO roles (title, salary, department_id) VALUES ("${answers.roleName}", "${answers.salary}", ${departID})`,
             (err, res) => {
               if (err) {
@@ -268,6 +293,7 @@ const addRole = async () => {
     })
 };
 
+// VIEW ALL DEPARTMENTS QUERY
 const allDepartments = () => {
   database.query('SELECT depart.id as ID, depart.department_name AS Department from department AS depart',
     (err, res) => {
@@ -279,6 +305,7 @@ const allDepartments = () => {
     })
 };
 
+// ADDING A NEW DEPARTMENT FUNCTION
 const addDepartment = () => {
   inquirer.prompt([
     {
@@ -300,4 +327,5 @@ const addDepartment = () => {
     })
 };
 
+// EXPORTING THE APP FOR THE INDEX
 module.exports = { mainApp };
