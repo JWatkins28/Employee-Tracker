@@ -55,7 +55,9 @@ source db/seeds.sql
 
 ## **Usage**
 
-To use this project you'll need to run 'npm i' in your terminal to install the needed dependencies. Then you'll also need to create a .env file in the root directory of the project or you can edit lines 32 and 33 of the app.js file if you want to hardcode your SQL login credentials. 
+To use this project you'll need to run 'npm i' in your terminal to install the needed dependencies. Then you'll also need to create a .env file in the root directory of the project or you can edit lines 33 and 34 of the app.js file if you want to hardcode your SQL login credentials. 
+
+![sql credentials](./assets/sqlcreds.PNG)
 
 Once that is done you'll need to login to mySQL in the terminal and source db/schema.sql. If you want to seed it with some initial data there is also a sample seeds.sql file in the same folder.
 
