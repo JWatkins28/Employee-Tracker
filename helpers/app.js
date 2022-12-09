@@ -1,5 +1,4 @@
 const inquirer = require("inquirer");
-// const { database, allEmployees } = require('../config/connections');
 const mysql = require('mysql2');
 require('dotenv').config();
 const cTable = require('console.table');
